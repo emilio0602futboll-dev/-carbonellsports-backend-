@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1787257723153,
+    "categoria": "tenis",
+    "titulo": "Prueba de persistencia",
+    "cuerpo": "Si sobrevive al reinicio, funciona",
+    "autor": "tú",
+    "votos": 0,
+    "comentarios": []
+  },
+  {
+    "id": 1,
+    "categoria": "futbol",
+    "titulo": "España gana el mundial",
+    "cuerpo": "Prueba desde el backend",
+    "autor": "Pedro miel",
+    "votos": 14,
+    "comentarios": []
+  },
+  {
+    "id": 2,
+    "categoria": "baloncesto",
+    "titulo": "Los celtics ganan el campeonato",
+    "cuerpo": "Prueba desde el backend",
+    "autor": "Maria Garcia",
+    "votos": 20,
+    "comentarios": []
+  }
+]
