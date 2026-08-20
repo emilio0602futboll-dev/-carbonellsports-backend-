@@ -2,7 +2,6 @@ const cors = require('cors');
 const fs = require('fs');
 const express = require('express');
 const { resolve } = require('path');
-const API_URL = "https://carbonellsports-backend.onrender.com";
 
 const app = express();
 app.use(express.json());
