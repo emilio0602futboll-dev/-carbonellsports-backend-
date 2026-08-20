@@ -2,11 +2,12 @@ const cors = require('cors');
 const fs = require('fs');
 const express = require('express');
 const { resolve } = require('path');
+const API_URL = "https://carbonellsports-backend.onrender.com";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-const port = 3010;
+const port = process.env.PORT || 3010;
 
 function leerPosts() {
   const datos = fs.readFileSync('posts.json', 'utf-8');
