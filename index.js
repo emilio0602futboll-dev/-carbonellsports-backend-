@@ -57,7 +57,12 @@ app.post('/posts/:id/comentarios', (req, res) => {
     return res.status(404).json({ error: 'Post no encontrado' });
   }
 
-  post.comentarios.push(req.body.texto);
+  const nuevoComentario = {
+  autor: req.body.autor || 'anónimo',
+  texto: req.body.texto
+};
+
+post.comentarios.push(nuevoComentario);
   guardarPosts();
   res.status(201).json(post);
 });
