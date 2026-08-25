@@ -77,7 +77,7 @@ app.patch('/posts/:id/votos', (req, res) => {
   res.json(post);
 });
 app.post('/importar-noticias', async (req, res) => {
-  const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
+ const feed = await parser.parseURL('https://as.com/rss/tag/futbol.xml');
   res.json(feed.items[0]);
 });
 app.post('/posts/:id/comentarios', (req, res) => {
