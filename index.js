@@ -21,7 +21,7 @@ function guardarPosts() {
 }
 async function importarNoticias() {
   const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
-
+ 
   feed.items.slice(0, 5).forEach(item => {
     const yaExiste = posts.some(p => p.titulo === item.title);
     if (yaExiste) return;
