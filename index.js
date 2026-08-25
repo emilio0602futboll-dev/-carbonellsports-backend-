@@ -26,12 +26,15 @@ async function importarNoticias() {
     const yaExiste = posts.some(p => p.titulo === item.title);
     if (yaExiste) return;
 
+    const imagen = item.enclosure ? item.enclosure.url : null;
+
     const nuevoPost = {
       id: Date.now() + Math.random(),
-      categoria: 'general',
+      categoria: 'noticias',
       titulo: item.title,
       cuerpo: item.contentSnippet || '',
       autor: 'Marca (automático)',
+      imagen: imagen,
       votos: 0,
       comentarios: []
     };
@@ -40,7 +43,7 @@ async function importarNoticias() {
   });
 
   guardarPosts();
-} 
+}
 
 app.get('/posts', (req, res) => {
   res.json(posts);
