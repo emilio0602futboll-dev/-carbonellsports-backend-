@@ -77,8 +77,8 @@ app.patch('/posts/:id/votos', (req, res) => {
   res.json(post);
 });
 app.post('/importar-noticias', async (req, res) => {
-  await importarNoticias();
-  res.json({ mensaje: 'Noticias importadas', posts });
+  const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
+  res.json(feed.items[0]);
 });
 app.post('/posts/:id/comentarios', (req, res) => {
   const post = posts.find((p) => p.id === Number(req.params.id));
