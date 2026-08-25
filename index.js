@@ -20,14 +20,24 @@ let posts = leerPosts();
 function guardarPosts() {
   fs.writeFileSync('posts.json', JSON.stringify(posts, null, 2));
 }
+async function obtenerImagen(url) {
+  try {
+    const respuesta = await fetch(url);
+    const html = await respuesta.text();
+    const $ = cheerio.load(html);
+    return $('meta[property="og:image"]').attr('content') || null;
+  } catch (error) {
+    return null;
+  }
+}
 async function importarNoticias() {
   const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
- 
-  feed.items.slice(0, 5).forEach(item => {
-    const yaExiste = posts.some(p => p.titulo === item.title);
-    if (yaExiste) return;
 
-    const imagen = item.enclosure ? item.enclosure.url : null;
+  for (const item of feed.items.slice(0, 5)) {
+    const yaExiste = posts.some(p => p.titulo === item.title);
+    if (yaExiste) continue;
+
+    const imagen = await obtenerImagen(item.link);
 
     const nuevoPost = {
       id: Date.now() + Math.random(),
@@ -41,7 +51,7 @@ async function importarNoticias() {
     };
 
     posts.push(nuevoPost);
-  });
+  }
 
   guardarPosts();
 }
@@ -78,12 +88,8 @@ app.patch('/posts/:id/votos', (req, res) => {
   res.json(post);
 });
 app.post('/importar-noticias', async (req, res) => {
-  try {
-    const feed = await parser.parseURL('https://as.com/rss/tag/futbol.xml');
-    res.json(feed.items[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  await importarNoticias();
+  res.json({ mensaje: 'Noticias importadas', posts });
 });
 app.post('/posts/:id/comentarios', (req, res) => {
   const post = posts.find((p) => p.id === Number(req.params.id));
