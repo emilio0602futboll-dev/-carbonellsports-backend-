@@ -1,3 +1,4 @@
+const cheerio = require('cheerio');
 const Parser = require('rss-parser');
 const parser = new Parser();
 const cors = require('cors');
