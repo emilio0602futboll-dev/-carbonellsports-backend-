@@ -1,3 +1,5 @@
+const Parser = require('rss-parser');
+const parser = new Parser();
 const cors = require('cors');
 const fs = require('fs');
 const express = require('express');
@@ -17,6 +19,28 @@ let posts = leerPosts();
 function guardarPosts() {
   fs.writeFileSync('posts.json', JSON.stringify(posts, null, 2));
 }
+async function importarNoticias() {
+  const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
+
+  feed.items.slice(0, 5).forEach(item => {
+    const yaExiste = posts.some(p => p.titulo === item.title);
+    if (yaExiste) return;
+
+    const nuevoPost = {
+      id: Date.now() + Math.random(),
+      categoria: 'general',
+      titulo: item.title,
+      cuerpo: item.contentSnippet || '',
+      autor: 'Marca (automático)',
+      votos: 0,
+      comentarios: []
+    };
+
+    posts.push(nuevoPost);
+  });
+
+  guardarPosts();
+} 
 
 app.get('/posts', (req, res) => {
   res.json(posts);
@@ -49,7 +73,10 @@ app.patch('/posts/:id/votos', (req, res) => {
   guardarPosts();
   res.json(post);
 });
-
+app.post('/importar-noticias', async (req, res) => {
+  await importarNoticias();
+  res.json({ mensaje: 'Noticias importadas', posts });
+});
 app.post('/posts/:id/comentarios', (req, res) => {
   const post = posts.find((p) => p.id === Number(req.params.id));
 
