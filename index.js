@@ -20,7 +20,7 @@ function guardarPosts() {
   fs.writeFileSync('posts.json', JSON.stringify(posts, null, 2));
 }
 async function importarNoticias() {
-  const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
+  const feed = await parser.parseURL('https://feeds.as.com/mrss-s/pages/as/site/as.com/section/futbol/portada/');
  
   feed.items.slice(0, 5).forEach(item => {
     const yaExiste = posts.some(p => p.titulo === item.title);
