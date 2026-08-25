@@ -77,8 +77,12 @@ app.patch('/posts/:id/votos', (req, res) => {
   res.json(post);
 });
 app.post('/importar-noticias', async (req, res) => {
- const feed = await parser.parseURL('https://as.com/rss/tag/futbol.xml');
-  res.json(feed.items[0]);
+  try {
+    const feed = await parser.parseURL('https://as.com/rss/tag/futbol.xml');
+    res.json(feed.items[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 app.post('/posts/:id/comentarios', (req, res) => {
   const post = posts.find((p) => p.id === Number(req.params.id));
