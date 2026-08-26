@@ -2,24 +2,36 @@ const cheerio = require('cheerio');
 const Parser = require('rss-parser');
 const parser = new Parser();
 const cors = require('cors');
-const fs = require('fs');
 const express = require('express');
 const { resolve } = require('path');
-
 const app = express();
 app.use(express.json());
 app.use(cors());
 const port = process.env.PORT || 3010;
 
-function leerPosts() {
-  const datos = fs.readFileSync('posts.json', 'utf-8');
-  return JSON.parse(datos);
-}
+const mongoose = require('mongoose');
 
-let posts = leerPosts();
-function guardarPosts() {
-  fs.writeFileSync('posts.json', JSON.stringify(posts, null, 2));
-}
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Conectado a MongoDB'))
+  .catch((error) => console.error('Error al conectar a MongoDB:', error));
+
+const comentarioSchema = new mongoose.Schema({
+  autor: String,
+  texto: String
+});
+
+const postSchema = new mongoose.Schema({
+  categoria: String,
+  titulo: String,
+  cuerpo: String,
+  autor: String,
+  imagen: String,
+  votos: { type: Number, default: 0 },
+  comentarios: [comentarioSchema]
+});
+
+const Post = mongoose.model('Post', postSchema);
+
 async function obtenerImagen(url) {
   try {
     const respuesta = await fetch(url);
@@ -34,77 +46,68 @@ async function importarNoticias() {
   const feed = await parser.parseURL('https://e00-marca.uecdn.es/rss/portada.xml');
 
   for (const item of feed.items.slice(0, 5)) {
-    const yaExiste = posts.some(p => p.titulo === item.title);
+    const yaExiste = await Post.findOne({ titulo: item.title });
     if (yaExiste) continue;
 
     const imagen = await obtenerImagen(item.link);
 
-    const nuevoPost = {
-      id: Date.now() + Math.random(),
+    const nuevoPost = new Post({
       categoria: 'noticias',
       titulo: item.title,
       cuerpo: item.contentSnippet || '',
       autor: 'Marca (automático)',
-      imagen: imagen,
-      votos: 0,
-      comentarios: []
-    };
+      imagen: imagen
+    });
 
-    posts.push(nuevoPost);
+    await nuevoPost.save();
   }
-
-  guardarPosts();
 }
-
-app.get('/posts', (req, res) => {
+app.get('/posts', async (req, res) => {
+  const posts = await Post.find().sort({ _id: -1 });
   res.json(posts);
 });
 
-app.post('/posts', (req, res) => {
-  const nuevoPost = {
-    id: Date.now(),
+app.post('/posts', async (req, res) => {
+  const nuevoPost = new Post({
     categoria: req.body.categoria,
     titulo: req.body.titulo,
     cuerpo: req.body.cuerpo,
-    autor: req.body.autor || 'anónimo',
-    votos: 0,
-    comentarios: [],
-  };
+    autor: req.body.autor || 'anónimo'
+  });
 
-  posts.unshift(nuevoPost);
-  guardarPosts();
+  await nuevoPost.save();
   res.status(201).json(nuevoPost);
 });
 
-app.patch('/posts/:id/votos', (req, res) => {
-  const post = posts.find((p) => p.id === Number(req.params.id));
+app.patch('/posts/:id/votos', async (req, res) => {
+  const post = await Post.findById(req.params.id);
 
   if (!post) {
     return res.status(404).json({ error: 'Post no encontrado' });
   }
 
   post.votos += req.body.direccion;
-  guardarPosts();
+  await post.save();
   res.json(post);
 });
 app.post('/importar-noticias', async (req, res) => {
   await importarNoticias();
+  const posts = await Post.find().sort({ _id: -1 });
   res.json({ mensaje: 'Noticias importadas', posts });
 });
-app.post('/posts/:id/comentarios', (req, res) => {
-  const post = posts.find((p) => p.id === Number(req.params.id));
+app.post('/posts/:id/comentarios', async (req, res) => {
+  const post = await Post.findById(req.params.id);
 
   if (!post) {
     return res.status(404).json({ error: 'Post no encontrado' });
   }
 
-  const nuevoComentario = {
-  autor: req.body.autor || 'anónimo',
-  texto: req.body.texto
-};
+  post.comentarios.push({
+    autor: req.body.autor || 'anónimo',
+    texto: req.body.texto
+  });
 
-post.comentarios.push(nuevoComentario);
-  guardarPosts();
+  await post.save();
   res.status(201).json(post);
 });
 
